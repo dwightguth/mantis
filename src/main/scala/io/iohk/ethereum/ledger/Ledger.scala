@@ -446,13 +446,13 @@ class LedgerImpl(
 
     val worldForTx = _blockPreparator.updateSenderAccountBeforeExecution(stx, world2)
 
-    val evmConfig = EvmConfig.forBlock(blockHeader.number, blockchainConfig)
+    val evmConfig = EvmConfig.forBlock(blockHeader.number+1, blockchainConfig)
     val gasLimitForVm = stx.tx.gasLimit - evmConfig.calcTransactionIntrinsicGas(stx.tx.payload, stx.tx.isContractInit)
 
     if (gasLimitForVm < 0) {
       TxResult(worldForTx, stx.tx.gasLimit, Nil, ByteString(), Some(OutOfGas))
     } else {
-      val result = _blockPreparator.runVM(stx, blockHeader, worldForTx)
+      val result = _blockPreparator.runVM(stx, BlockHeader(blockHeader.parentHash, blockHeader.ommersHash, blockHeader.beneficiary, blockHeader.stateRoot, blockHeader.transactionsRoot, blockHeader.receiptsRoot, blockHeader.logsBloom, blockHeader.difficulty, blockHeader.number+1, blockHeader.gasLimit, blockHeader.gasUsed, blockHeader.unixTimestamp, blockHeader.extraData, blockHeader.mixHash, blockHeader.nonce), worldForTx)
       val totalGasToRefund = _blockPreparator.calcTotalGasToRefund(stx, result)
       TxResult(result.world, stx.tx.gasLimit - totalGasToRefund, result.logs, result.returnData, result.error)
     }
